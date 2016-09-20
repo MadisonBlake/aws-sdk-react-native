@@ -56,12 +56,15 @@ public class AWSRNLambdaClient extends ReactContextBaseJavaModule {
         if (!options.hasKey("region")) {
             throw new IllegalArgumentException("expected region key");
         }
-        final AWSRNCognitoCredentials credentials = this.getReactApplicationContext().getNativeModule(AWSRNCognitoCredentials.class);
-        if (credentials.getCredentialsProvider() == null) {
-            throw new IllegalArgumentException("AWSCognitoCredentials is not initialized");
-        }
+
         gson = new GsonBuilder().setFieldNamingStrategy(FieldNamingPolicy.UPPER_CAMEL_CASE).registerTypeAdapter(ByteBuffer.class, AWSRNClientMarshaller.getSerializer()).registerTypeAdapter(ByteBuffer.class, AWSRNClientMarshaller.getDeserializer()).create();
-        lambdaClient = new AWSLambdaClient(credentials.getCredentialsProvider(), new AWSRNClientConfiguration().withUserAgent("Lambda"));
+        
+        final AWSRNCredentialChain credentialChain = this.getReactApplicationContext().getNativeModule(AWSRNCredentialChain.class);
+        if (credentialChain.NumberSetCredentials() == 0) {
+            throw new IllegalArgumentException("No credentials have been configured");
+        }
+        
+        lambdaClient = new AWSLambdaClient(credentialChain.getChain(), new AWSRNClientConfiguration().withUserAgent("Lambda"));
         lambdaClient.setRegion(Region.getRegion(Regions.fromName(options.getString("region"))));
     }
 
