@@ -15,9 +15,12 @@
 
 package com.amazonaws.reactnative.dynamodb;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.reactnative.core.AWSRNClientMarshaller;
 import com.amazonaws.reactnative.core.AWSRNClientConfiguration;
 import com.amazonaws.reactnative.core.AWSRNCognitoCredentials;
+import com.amazonaws.reactnative.core.AWSRNCredentialChain;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.*;
@@ -28,6 +31,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.WritableMap;
 
 import com.google.gson.FieldNamingPolicy;
@@ -57,14 +61,20 @@ public class AWSRNDynamoDBClient extends ReactContextBaseJavaModule {
         if (!options.hasKey("region")) {
             throw new IllegalArgumentException("expected region key");
         }
-        final AWSRNCognitoCredentials credentials = this.getReactApplicationContext().getNativeModule(AWSRNCognitoCredentials.class);
-        if (credentials.getCredentialsProvider() == null) {
-            throw new IllegalArgumentException("AWSCognitoCredentials is not initialized");
-        }
+
+
         gson = new GsonBuilder().setFieldNamingStrategy(FieldNamingPolicy.UPPER_CAMEL_CASE).registerTypeAdapter(ByteBuffer.class, AWSRNClientMarshaller.getSerializer()).registerTypeAdapter(ByteBuffer.class, AWSRNClientMarshaller.getDeserializer()).create();
-        dynamodbClient = new AmazonDynamoDBClient(credentials.getCredentialsProvider(), new AWSRNClientConfiguration().withUserAgent("DynamoDB"));
+
+
+        final AWSRNCredentialChain credentialChain = this.getReactApplicationContext().getNativeModule(AWSRNCredentialChain.class);
+        if (credentialChain.NumberSetCredentials() == 0) {
+            throw new IllegalArgumentException("No credentials have been configured");
+        }
+
+        dynamodbClient = new AmazonDynamoDBClient(credentialChain.getChain(), new AWSRNClientConfiguration().withUserAgent("DynamoDB"));
         dynamodbClient.setRegion(Region.getRegion(Regions.fromName(options.getString("region"))));
     }
+
     
     @ReactMethod
     public void DeleteTable(final ReadableMap options, final Promise promise) {

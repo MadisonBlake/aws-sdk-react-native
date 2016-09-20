@@ -39,6 +39,8 @@ public class AWSRNCorePackage implements ReactPackage {
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
         modules.add(new AWSRNCognitoCredentials(reactContext));
+        modules.add(new AWSRNBasicCredentials(reactContext));
+        modules.add(new AWSRNCredentialChain(reactContext));
         return modules;
     }
 

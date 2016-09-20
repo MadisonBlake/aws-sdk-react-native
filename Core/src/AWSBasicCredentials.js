@@ -12,10 +12,27 @@
 // express or implied. See the License for the specific language governing
 // permissions and limitations under the License.
 //
-import AWSCognitoCredentials from "./AWSCognitoCredentials";
-import AWSBasicCredentials from "./AWSBasicCredentials";
+import React, { Component } from 'react';
+import {
+  Platform,
+  NativeModules,
+  NativeAppEventEmitter,
+  DeviceEventEmitter
+} from 'react-native';
 
-module.exports = {
-	AWSCognitoCredentials: new AWSCognitoCredentials(),
-	AWSBasicCredentials: new AWSBasicCredentials()
-};
+var basicClient = NativeModules.AWSRNBasicCredentials;
+var listener;
+
+export default class AWSBasicCredentials{
+ /*
+  * Represents a AWSCognitoCredentials class
+  * @constructor
+  */
+  constructor(){
+  }
+
+
+  initWithOptions(options){
+    basicClient.initWithOptions(options);
+  }
+}

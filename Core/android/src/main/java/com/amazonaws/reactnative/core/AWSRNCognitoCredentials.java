@@ -19,9 +19,12 @@ import android.support.annotation.Nullable;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCognitoIdentityProvider;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSSessionCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.auth.IdentityChangedListener;
+import com.amazonaws.internal.StaticCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
@@ -93,11 +96,17 @@ public class AWSRNCognitoCredentials extends ReactContextBaseJavaModule {
                     sendEvent(getReactApplicationContext(), IDENTITYCHANGE, params);
                 }
             });
+
+            //Notify the chain that a new credential provider was created
+            final AWSRNCredentialChain credentialChain = this.getReactApplicationContext().getNativeModule(AWSRNCredentialChain.class);
+            credentialChain.ReConstructChain();
         }
     }
 
+
     @ReactMethod
     public void setLogins(final ReadableMap logins) {
+
         final Map<String, String> userLogins = new HashMap<String, String>();
         final ReadableMapKeySetIterator loginsIterable = logins.keySetIterator();
         while (loginsIterable.hasNextKey()) {

@@ -21,6 +21,7 @@ import android.util.Log;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
@@ -28,6 +29,7 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferType;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.reactnative.core.AWSRNClientConfiguration;
 import com.amazonaws.reactnative.core.AWSRNCognitoCredentials;
+import com.amazonaws.reactnative.core.AWSRNCredentialChain;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
@@ -44,6 +46,7 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -94,11 +97,13 @@ public class AWSRNS3TransferUtility extends ReactContextBaseJavaModule {
         if (!options.hasKey(REGION)) {
             throw new IllegalArgumentException("region not supplied");
         }
-        final AWSRNCognitoCredentials credentials = this.getReactApplicationContext().getNativeModule(AWSRNCognitoCredentials.class);
-        if (credentials.getCredentialsProvider() == null) {
-            throw new IllegalArgumentException("AWSCognitoCredentials is not initialized");
+
+        final AWSRNCredentialChain credentialChain = this.getReactApplicationContext().getNativeModule(AWSRNCredentialChain.class);
+        if (credentialChain.NumberSetCredentials() == 0) {
+            throw new IllegalArgumentException("No credentials have been configured");
         }
-        final AmazonS3 s3 = new AmazonS3Client(credentials.getCredentialsProvider(), new AWSRNClientConfiguration().withUserAgent("AWSS3TransferUtility"));
+
+        AmazonS3 s3 = new AmazonS3Client(credentialChain.getChain(), new AWSRNClientConfiguration().withUserAgent("AWSS3TransferUtility"));
         s3.setRegion(Region.getRegion(Regions.fromName(options.getString(REGION))));
         transferUtility = new TransferUtility(s3, getReactApplicationContext());
     }
@@ -157,6 +162,8 @@ public class AWSRNS3TransferUtility extends ReactContextBaseJavaModule {
         if ((Boolean) map.get(SUBSCRIBE)) {
             this.subscribe(observer);
         }
+
+
         promise.resolve("success");
     }
 
