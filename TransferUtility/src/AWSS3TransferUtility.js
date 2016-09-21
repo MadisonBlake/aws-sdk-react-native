@@ -75,12 +75,18 @@ export default class AWSS3TransferUtility{
   * InstanceOfAWSS3TransferUtility.initWithOptions({"region":"bucketRegion"})
   */
   initWithOptions(options){
-    if(options.region){
-      s3Client.initWithOptions({"region":options.region});
+    if(options){
+      s3Client.initWithOptions(options);
     }else{
       console.error("undefined region field")
     }
   }
+
+  listFiles(options,callback){
+    s3Client.listFiles(options,callback);
+  }
+
+
   /*
   * Creates a download request and returns an ID to represent a upload task.
   * @param {string} bucket - the bucket name

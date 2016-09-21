@@ -34,6 +34,9 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.util.StringUtils;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.Promise;
@@ -42,8 +45,10 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.facebook.stetho.common.StringUtil;
 
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -55,11 +60,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AWSRNS3TransferUtility extends ReactContextBaseJavaModule {
     private TransferUtility transferUtility;
+    private AmazonS3 s3;
     private static final Map<String, Map<String, Object>> requestMap = new ConcurrentHashMap<>();
     private static final Map<Integer, String> transferIDMap = new ConcurrentHashMap<>();
     private static final String REQUESTID = "requestid";
     private static final String TRANSFERID = "transferid";
     private static final String BUCKET = "bucket";
+    private static final String PREFIX = "prefix";
     private static final String KEY = "key";
     private static final String PATH = "path";
     private static final String SUBSCRIBE = "subscribe";
@@ -103,9 +110,34 @@ public class AWSRNS3TransferUtility extends ReactContextBaseJavaModule {
             throw new IllegalArgumentException("No credentials have been configured");
         }
 
-        AmazonS3 s3 = new AmazonS3Client(credentialChain.getChain(), new AWSRNClientConfiguration().withUserAgent("AWSS3TransferUtility"));
+        s3 = new AmazonS3Client(credentialChain.getChain(), new AWSRNClientConfiguration().withUserAgent("AWSS3TransferUtility"));
         s3.setRegion(Region.getRegion(Regions.fromName(options.getString(REGION))));
         transferUtility = new TransferUtility(s3, getReactApplicationContext());
+    }
+
+    @ReactMethod
+    public void listFiles(final ReadableMap options, final Callback callback) {
+
+        WritableArray listingArr = Arguments.createArray();
+
+        ObjectListing s3list = s3.listObjects(options.getString(BUCKET), options.getString(PREFIX));
+
+        do {
+
+            for (S3ObjectSummary obj : s3list.getObjectSummaries()) {
+                WritableMap obj_map = Arguments.createMap();
+                obj_map.putString("key", obj.getKey());
+                obj_map.putInt("size", (int) obj.getSize());
+                obj_map.putString("modified", StringUtils.fromDate(obj.getLastModified()));
+                listingArr.pushMap(obj_map);
+            }
+
+            s3list = s3.listNextBatchOfObjects(s3list);
+
+        }while(s3list.isTruncated());
+
+        callback.invoke(listingArr);
+
     }
 
     @ReactMethod
