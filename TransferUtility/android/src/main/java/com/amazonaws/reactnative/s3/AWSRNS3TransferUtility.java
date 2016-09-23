@@ -48,7 +48,6 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
-import com.facebook.stetho.common.StringUtil;
 
 import java.io.File;
 import java.nio.ByteBuffer;
