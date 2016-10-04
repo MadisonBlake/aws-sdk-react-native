@@ -155,7 +155,7 @@ public class AWSRNS3TransferUtility extends ReactContextBaseJavaModule {
         final Map<String, Object> map = new ConcurrentHashMap<>();
         map.put(BUCKET, options.getString(BUCKET));
         map.put(KEY, options.getString(KEY));
-        map.put(PATH, Environment.getExternalStorageDirectory() + options.getString(PATH));
+        map.put(PATH, options.getString(PATH));
         map.put(TYPE, DOWNLOAD);
         map.put(SUBSCRIBE, options.getBoolean(SUBSCRIBE));
         map.put(COMPLETIONHANDLER, options.getBoolean(COMPLETIONHANDLER));
